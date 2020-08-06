@@ -1,69 +1,94 @@
-class ProductList {
-  #privateProp;
+const API = 'https://raw.githubusercontent.com/GeekBrainsTutorial/online-store-api/master/responses';
 
-  constructor(container = '.products') {
-    this.container = container;
-    this.goods = [];
-    this.allProducts = [];
-    this.#privateProp = '123';
+const app = new Vue({
+  el: '#app',
+  data: {
+    catalogUrl: '/catalogData.json',
+    products: [],
+    imgCatalog: 'https://placehold.it/200x150',
 
-    this.#fetchProducts();
-    this.render();
-    this.calcSum();
-  }
+    searchLine: "",
 
-  get prop() {
-    return this.#privateProp;
-  }
+    cart: [],
+    isVisibleCart: false,
+    imgCart: 'https://placehold.it/50x100',
+  },
+  methods: {
+    getJson(url) {
+      return fetch(url)
+        .then(result => result.json())
+        .catch(error => {
+          console.log(error);
+        })
+    },
 
-  set prop(value) {
-    this.#privateProp = value;
-  }
+    addProduct(product) {
+      const productOfCart = this.cart.find(el => el.id_product === product.id_product);
 
-  #fetchProducts() {
-    this.goods = [
-      {id: 1, title: 'Notebook', price: 20000},
-      {id: 2, title: 'Mouse', price: 1500},
-      {id: 3, title: 'Keyboard', price: 5000},
-      {id: 4, title: 'Gamepad', price: 4500},
-    ];
-  }
+      if (productOfCart) {
+        productOfCart.quantity++;
+      } else {
+        const prod = Object.assign({
+          quantity: 1
+        }, product);
+        this.cart.push(prod);
+      }
+    },
 
-  render() {
-    const block = document.querySelector(this.container);
+    getTotalPrice() {
+      let totalPrice = 0;
+      for (let product of this.cart) {
+        totalPrice += product.price * product.quantity;
+      }
+      return totalPrice;
+    },
 
-    for (let product of this.goods) {
-      const productObject = new ProductItem(product);
+    removeProductOfCart(product) {
+      this.cart.splice(this.cart.indexOf(product), 1);
+    },
 
-      this.allProducts.push(productObject);
-      block.insertAdjacentHTML('beforeend', productObject.render());
+    decreaseProductOfCart(product) {
+      if (product.quantity !== 1) {
+        product.quantity--;
+      } else {
+        this.removeProductOfCart(product);
+      }
+    },
+
+    increaseProductOfCart(product) {
+      product.quantity++;
+    },
+    filterGoods(product) {
+      return (new RegExp(this.searchLine, "i")).test(product.product_name);
     }
-  }
+  },
+  beforeCreate() {
 
-  calcSum() {
-    const reducer = (accumulator, currentValue) => accumulator + currentValue;
-    const summaryPrice = this.goods.map(goods => goods.price).reduce(reducer);
-  }
-}
+  },
+  created() {
+    this.getJson(`${API + this.catalogUrl}`)
+      .then(data => {
+        for (let el of data) {
+          this.products.push(el);
+        }
+      });
+  },
+  beforeMount() {
 
-class ProductItem {
-  constructor(product, img = 'https://placehold.it/200x150') {
-    this.title = product.title;
-    this.price = product.price;
-    this.id = product.id;
-    this.img = img;
-  }
+  },
+  mounted() {
 
-  render() {
-    return `<div class="product-item" data-id="${this.id}">
-              <img src="${this.img}" alt="Some img">
-              <div class="desc">
-                  <h3>${this.title}</h3>
-                  <p>${this.price} \u20bd</p>
-                  <button class="buy-btn">Купить</button>
-              </div>
-          </div>`;
-  }
-}
-const list = new ProductList();
+  },
+  beforeUpdate() {
 
+  },
+  updated() {
+
+  },
+  beforeDestroy() {
+
+  },
+  destroyed() {
+
+  },
+});
